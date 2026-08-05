@@ -1,0 +1,68 @@
+#!/bin/bash
+
+REPORT="/tmp/server_health_$(date +%F_%H-%M-%S).log"
+
+{
+echo "=========================================="
+echo "      SERVER HEALTH REPORT"
+echo "=========================================="
+echo "Hostname : $(hostname)"
+echo "Date     : $(date)"
+echo "Kernel   : $(uname -r)"
+echo "Uptime   : $(uptime -p)"
+
+echo
+echo "========== CPU =========="
+top -bn1 | grep "Cpu(s)"
+
+echo
+echo "========== Memory =========="
+free -h
+
+echo
+echo "========== Disk =========="
+df -h
+
+echo
+echo "========== Load Average =========="
+uptime
+
+echo
+echo "========== Top 5 CPU Processes =========="
+ps -eo pid,user,%cpu,%mem,cmd --sort=-%cpu | head -6
+
+echo
+echo "========== Top 5 Memory Processes =========="
+ps -eo pid,user,%cpu,%mem,cmd --sort=-%mem | head -6
+
+echo
+echo "========== Logged In Users =========="
+who
+
+echo
+echo "========== Network =========="
+ip -brief address
+
+echo
+echo "========== Internet Connectivity =========="
+ping -c 2 8.8.8.8 >/dev/null && echo "Internet : OK" || echo "Internet : FAILED"
+
+echo
+echo "========== Disk Inodes =========="
+df -ih
+
+echo
+echo "========== Failed Systemd Services =========="
+systemctl --failed
+
+echo
+echo "========== Last Boot =========="
+who -b
+
+echo
+echo "=========================================="
+
+} | tee "$REPORT"
+
+echo
+echo "Report saved to $REPORT"
